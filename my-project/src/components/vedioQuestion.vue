@@ -1,5 +1,11 @@
 <template>
   <div class="question">
+    <div v-show="showCount">
+      <div class="countdown">
+      </div>
+      <div class="text"> {{count}}</div>
+    </div>
+    <div>{{topicTime}}秒</div>
     <input type="button"
       class="form-control"
       value="开始录音"
@@ -43,7 +49,10 @@ export default {
       tempFilePath: "",
       videoSrc: "",
       cameraContext: "",
+      count: 3,
+      topicTime:30,
       videoContext: "",
+      showCount: true,
       recorderManager: "",
       userInfo: {
         nickName: "mpvue",
@@ -58,11 +67,13 @@ export default {
   onLoad() {
     this.cameraContext = wx.createCameraContext();
   },
-
+  created() {
+    this.countDown(3);
+  },
   methods: {
     handleRecordStart() {
       const options = {
-        duration: 10000,
+        duration: 600000,
         sampleRate: 44100,
         numberOfChannels: 1,
         encodeBitRate: 192000,
@@ -72,10 +83,6 @@ export default {
       recorderManager.start(options);
       recorderManager.onStart(() => {
         console.log("recorder start");
-      });
-      recorderManager.onStop(res => {
-        console.log("recorder stop", res);
-        // const {tempFilePath} = res
       });
       // 错误回调
       // recorderManager.onError((res) => {
@@ -122,6 +129,20 @@ export default {
           this.videoSrc = res.tempVideoPath;
         }
       });
+    },
+    countDown(count) {
+      if (count === 0) {
+        this.count = "开始";
+        setTimeout(() => {
+          this.showCount = false;
+        }, 1000);
+        return;
+      }
+      setTimeout(() => {
+        count--;
+        this.count = count;
+        this.countDown(count);
+      }, 1000);
     }
   }
 };
@@ -129,7 +150,24 @@ export default {
 
 <style scoped>
 .question {
-  
+}
+.countdown {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+.text {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  font-size: 60px;
+  color: #fff;
+  z-index: 2;
 }
 </style>
 
