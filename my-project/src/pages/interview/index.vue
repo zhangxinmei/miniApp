@@ -40,6 +40,7 @@ import store from "../counter/store.js";
 const innerAudioContext = wx.createInnerAudioContext();
 let vedioCountdownId = "";
 let vedioStopId = "";
+let recordeStopId = "";
 
 export default {
   data() {
@@ -73,6 +74,7 @@ export default {
     if (this.isHide) {
       clearTimeout(vedioCountdownId);
       clearTimeout(vedioStopId);
+      clearTimeout(recordeStopId);
       if (this.currentData.type === 1) {
         this.cameraContext = wx.createCameraContext();
       }
@@ -104,7 +106,7 @@ export default {
 
   methods: {
     handleRecordStart() {
-      const recorderManager = wx.getRecorderManager();
+      // const recorderManager = wx.getRecorderManager();
       const options = {
         duration: 60000,
         sampleRate: 44100,
@@ -113,14 +115,18 @@ export default {
         format: "mp3",
         frameSize: 50
       };
-      recorderManager.start(options);
-      recorderManager.onError(res => {
-        console.log("error", res);
-      });
-      recorderManager.onStart(() => {
+      this.recorderManager.start(options);
+      this.recorderManager.onStart(() => {
         console.log("recorder start");
       });
-      recorderManager.onStop(res => {
+      // 错误回调
+      this.recorderManager.onError(res => {
+        console.log("录音error", res);
+      });
+    },
+    handleRecordStop() {
+      this.recorderManager.stop();
+      this.recorderManager.onStop(res => {
         console.log("recorder stop", res);
         const { tempFilePath } = res;
         this.tempFilePath = tempFilePath;
@@ -132,19 +138,7 @@ export default {
         });
         store.commit("collectRecord", this.topicSet);
         this.recurrentCountdown();
-        // const TopicSetLastIndex = store.state.interviewTopicSet.length - 1;
-        // if (this.status === "show") {
-        //   this.index = TopicSetLastIndex;
-        //   this.recurrentCountdown();
-        // }
-        // if (this.status === "hide") {
-        //   this.showNextBtn = true;
-        // }
       });
-      // 错误回调
-      // recorderManager.onError((res) => {
-      //   console.log(res)
-      // })
     },
     startRecord() {
       console.log("cameraContext", this.cameraContext);
@@ -221,8 +215,11 @@ export default {
           }
           if (this.currentData.type === 2) {
             this.vedioCoundown(61);
-            console.log("录音22333");
+            // console.log("录音22333");
             this.handleRecordStart();
+            recordeStopId = setTimeout(() => {
+              this.handleRecordStop();
+            }, 60000);
           }
         }, 1000);
         return;
